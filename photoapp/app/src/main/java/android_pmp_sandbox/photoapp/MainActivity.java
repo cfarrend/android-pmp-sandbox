@@ -23,12 +23,15 @@ import java.util.Date;
 
 public class MainActivity extends AppCompatActivity {
 
+    File IMAGE_STORAGE_DIR;
     static final int REQUEST_IMAGE_CAPTURE = 1;
     String mCurrentPhotoPath;
     Uri mImageUri;
+    Uri lastImageUri;
 
     @Override
     protected void onCreate(Bundle savedInstanceState) {
+        IMAGE_STORAGE_DIR = getExternalFilesDir(Environment.DIRECTORY_PICTURES);
         super.onCreate(savedInstanceState);
         setContentView(R.layout.mainactivity_layout);
     }
@@ -36,17 +39,21 @@ public class MainActivity extends AppCompatActivity {
     @Override
     protected void onActivityResult(int requestCode, int resultCode, Intent data) {
         if (requestCode == REQUEST_IMAGE_CAPTURE && resultCode == RESULT_OK) {
-            ImageView imageView = (ImageView) findViewById(R.id.imageView1);
-            grabImage(imageView);
+            ImageView imageView1 = (ImageView) findViewById(R.id.imageView1);
+            ImageView imageView2 = (ImageView) findViewById(R.id.imageView2);
+            grabImage(imageView1, mImageUri);
+            if (lastImageUri != null) {
+                grabImage(imageView2, lastImageUri);
+            }
         }
     }
 
-    private void grabImage(ImageView imageView) {
-        getContentResolver().notifyChange(mImageUri, null);
+    private void grabImage(ImageView imageView, Uri imgUri) {
+        getContentResolver().notifyChange(imgUri, null);
         ContentResolver cr = getContentResolver();
         Bitmap bitmap;
         try {
-            bitmap = android.provider.MediaStore.Images.Media.getBitmap(cr, mImageUri);
+            bitmap = android.provider.MediaStore.Images.Media.getBitmap(cr, imgUri);
             imageView.setImageBitmap(bitmap);
         }   catch (Exception e) {
             Log.e("ERR", "Failed to load image");
@@ -81,6 +88,18 @@ public class MainActivity extends AppCompatActivity {
     }
 
     private File createImageFile() throws IOException {
+
+        // Try to get last file to display in second window
+        File dir = getExternalFilesDir(Environment.DIRECTORY_PICTURES);
+        File[] dirFiles = dir.listFiles();
+
+        if (dirFiles != null) {
+            for (File child : dirFiles) {
+                Log.d("File child", child.getAbsolutePath());
+                lastImageUri = Uri.fromFile(child);
+            }
+        }
+
         // Create an image file name
         String timeStamp = new SimpleDateFormat("yyyMMdd_HHmmss").format(new Date());
         String imageFileName = "JPEG_" + timeStamp + "_";
@@ -95,6 +114,8 @@ public class MainActivity extends AppCompatActivity {
 
         // Save file
         mCurrentPhotoPath = image.getAbsolutePath();
+        String storDir = storageDir.getAbsolutePath();
+        Log.d("storageDir", storDir);
         Log.d("mCurrentPhotoPath", mCurrentPhotoPath);
         return image;
     }
