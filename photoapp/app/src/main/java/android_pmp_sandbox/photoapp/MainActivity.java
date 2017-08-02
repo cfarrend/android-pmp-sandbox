@@ -14,7 +14,6 @@ import android.os.Bundle;
 import android.util.Log;
 import android.view.View;
 import android.widget.ImageView;
-import android.widget.Toast;
 
 import java.io.File;
 import java.io.IOException;
@@ -24,6 +23,8 @@ import java.util.Date;
 public class MainActivity extends AppCompatActivity {
 
     File IMAGE_STORAGE_DIR;
+    File CAPTURED_IMAGE_PHOTO;
+    // File CAPTURED_IMAGE_METADATA;
     static final int REQUEST_IMAGE_CAPTURE = 1;
     String mCurrentPhotoPath;
     Uri mImageUri;
@@ -31,7 +32,9 @@ public class MainActivity extends AppCompatActivity {
 
     @Override
     protected void onCreate(Bundle savedInstanceState) {
+        // Configure where images are to be stored
         IMAGE_STORAGE_DIR = getExternalFilesDir(Environment.DIRECTORY_PICTURES);
+        // Configure where metadata are to be stored
         super.onCreate(savedInstanceState);
         setContentView(R.layout.mainactivity_layout);
     }
@@ -45,6 +48,9 @@ public class MainActivity extends AppCompatActivity {
             if (lastImageUri != null) {
                 grabImage(imageView2, lastImageUri);
             }
+        }   else {
+            CAPTURED_IMAGE_PHOTO.delete();
+            // CAPTURED_IMAGE_METADATA.delete();
         }
     }
 
@@ -67,21 +73,25 @@ public class MainActivity extends AppCompatActivity {
             Intent takePictureIntent = new Intent(MediaStore.ACTION_IMAGE_CAPTURE);
             if (takePictureIntent.resolveActivity(getPackageManager()) != null) {
 
-                // File where phboto should go
+                // File where photo should go
                 File photoFile = null;
 
+                /*
                 try {
                     photoFile = createImageFile();
                 }   catch (IOException e) {
                     e.printStackTrace();
                 }
+                */
 
-                if (photoFile != null) {
-                    Log.d("takePhoto", "photoFile != null");
+                try {
+                    CAPTURED_IMAGE_PHOTO = createImageFile();
                     Uri photoURI = FileProvider.getUriForFile(this,
-                            "android_pmp_sandbox.photoapp.fileprovider", photoFile);
+                            "android_pmp_sandbox.photoapp.fileprovider", CAPTURED_IMAGE_PHOTO);
                     takePictureIntent.putExtra(MediaStore.EXTRA_OUTPUT, photoURI);
                     startActivityForResult(takePictureIntent, REQUEST_IMAGE_CAPTURE);
+                }   catch (Exception e) {
+                    e.printStackTrace();
                 }
             }
         }
@@ -93,6 +103,7 @@ public class MainActivity extends AppCompatActivity {
         File dir = getExternalFilesDir(Environment.DIRECTORY_PICTURES);
         File[] dirFiles = dir.listFiles();
 
+        // Cycle through files in directory
         if (dirFiles != null) {
             for (File child : dirFiles) {
                 Log.d("File child", child.getAbsolutePath());
@@ -101,8 +112,8 @@ public class MainActivity extends AppCompatActivity {
         }
 
         // Create an image file name
-        String timeStamp = new SimpleDateFormat("yyyMMdd_HHmmss").format(new Date());
-        String imageFileName = "JPEG_" + timeStamp + "_";
+        String timeStamp = new SimpleDateFormat("yyyMMddHHmmssSS").format(new Date());
+        String imageFileName = timeStamp + "_";
         File storageDir = getExternalFilesDir(Environment.DIRECTORY_PICTURES);
         File image = File.createTempFile(
                 imageFileName,
@@ -117,6 +128,7 @@ public class MainActivity extends AppCompatActivity {
         String storDir = storageDir.getAbsolutePath();
         Log.d("storageDir", storDir);
         Log.d("mCurrentPhotoPath", mCurrentPhotoPath);
+        Log.d("imageFileName", imageFileName);
         return image;
     }
 }

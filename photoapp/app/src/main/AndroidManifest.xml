@@ -4,7 +4,7 @@
 
     <uses-feature android:name="android.hardware.camera"
         android:required="true" />f
-
+    <!-- Change madSdkVersion to 18 eventually, just testing stuff for now -->
     <uses-permission android:name="android.permission.WRITE_EXTERNAL_STORAGE"
         android:maxSdkVersion="26" />
 
